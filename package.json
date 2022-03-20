@@ -1,0 +1,22 @@
+{
+  "name": "@malipetek/straightforward-state",
+  "version": "1.0.0",
+  "description": "Straightforward State, with conditional watching at one level deep",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test-watch": "jest --watchAll",
+    "build": "tsc ./index.ts",
+    "publish": "npm run build && npm run test && npm publish"
+  },
+  "author": "m.ali petek",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/plugin-transform-modules-commonjs": "^7.17.7",
+    "babel": "^6.23.0",
+    "jest": "^27.5.1"
+  },
+  "dependencies": {
+    "typescript": "^4.6.2"
+  }
+}
