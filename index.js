@@ -70,8 +70,8 @@ var newState = function () {
                     if (watchers && watchers.length) {
                         watchers.forEach(function (entry) {
                             var conditionResult = entry.condition ? entry.condition.split('_ncd_').reduce(function (result, cd) {
-                                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
-                                var _o = cd.split('_cvid_'), condition = _o[0], checkValueId = _o[1];
+                                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+                                var _r = cd.split('_cvid_'), condition = _r[0], checkValueId = _r[1];
                                 var orMore = false;
                                 var orLess = false;
                                 if (checkValueId) {
@@ -87,45 +87,55 @@ var newState = function () {
                                 var checkValue = entry.isValues[checkValueId];
                                 var operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
                                 if (checkValueId) {
+                                    /*
+                                    If is() method provided with a function we run the function and return early before value checking
+                                    */
+                                    if (checkValue.call) {
+                                        return checkValue((_a = _this.data["_".concat(condition)]) === null || _a === void 0 ? void 0 : _a.value);
+                                    }
                                     if (orMore) {
                                         switch (operator) {
                                             case 'none':
-                                                return result && !!(((_a = _this.data["_".concat(condition)]) === null || _a === void 0 ? void 0 : _a.value) >= checkValue);
+                                                return result && !!(((_b = _this.data["_".concat(condition)]) === null || _b === void 0 ? void 0 : _b.value) >= checkValue);
                                             case 'and':
-                                                return result && !!(((_b = _this.data["_".concat(condition.slice(1))]) === null || _b === void 0 ? void 0 : _b.value) >= checkValue);
+                                                return result && !!(((_c = _this.data["_".concat(condition.slice(1))]) === null || _c === void 0 ? void 0 : _c.value) >= checkValue);
                                             case 'or':
-                                                return result || !!(((_c = _this.data["_".concat(condition.slice(1))]) === null || _c === void 0 ? void 0 : _c.value) >= checkValue);
+                                                return result || !!(((_d = _this.data["_".concat(condition.slice(1))]) === null || _d === void 0 ? void 0 : _d.value) >= checkValue);
                                         }
                                     }
                                     else if (orLess) {
                                         switch (operator) {
                                             case 'none':
-                                                return result && !!(((_d = _this.data["_".concat(condition)]) === null || _d === void 0 ? void 0 : _d.value) <= checkValue);
+                                                return result && !!(((_e = _this.data["_".concat(condition)]) === null || _e === void 0 ? void 0 : _e.value) <= checkValue);
                                             case 'and':
-                                                return result && !!(((_e = _this.data["_".concat(condition.slice(1))]) === null || _e === void 0 ? void 0 : _e.value) <= checkValue);
+                                                return result && !!(((_f = _this.data["_".concat(condition.slice(1))]) === null || _f === void 0 ? void 0 : _f.value) <= checkValue);
                                             case 'or':
-                                                return result || !!(((_f = _this.data["_".concat(condition.slice(1))]) === null || _f === void 0 ? void 0 : _f.value) <= checkValue);
+                                                return result || !!(((_g = _this.data["_".concat(condition.slice(1))]) === null || _g === void 0 ? void 0 : _g.value) <= checkValue);
                                         }
                                     }
                                     else {
                                         switch (operator) {
                                             case 'none':
-                                                return result && !!(((_g = _this.data["_".concat(condition)]) === null || _g === void 0 ? void 0 : _g.value) === checkValue);
+                                                return result && !!(((_h = _this.data["_".concat(condition)]) === null || _h === void 0 ? void 0 : _h.value) === checkValue);
                                             case 'and':
-                                                return result && !!(((_h = _this.data["_".concat(condition.slice(1))]) === null || _h === void 0 ? void 0 : _h.value) === checkValue);
+                                                checkValue;
+                                                console.log((_j = _this.data["_".concat(condition.slice(1))]) === null || _j === void 0 ? void 0 : _j.value);
+                                                console.log(!!(((_k = _this.data["_".concat(condition.slice(1))]) === null || _k === void 0 ? void 0 : _k.value) === checkValue));
+                                                result;
+                                                return result && !!(((_l = _this.data["_".concat(condition.slice(1))]) === null || _l === void 0 ? void 0 : _l.value) === checkValue);
                                             case 'or':
-                                                return result || !!(((_j = _this.data["_".concat(condition.slice(1))]) === null || _j === void 0 ? void 0 : _j.value) === checkValue);
+                                                return result || !!(((_m = _this.data["_".concat(condition.slice(1))]) === null || _m === void 0 ? void 0 : _m.value) === checkValue);
                                         }
                                     }
                                 }
                                 else {
                                     switch (operator) {
                                         case 'none':
-                                            return result && !!((_k = _this.data["_".concat(condition)]) === null || _k === void 0 ? void 0 : _k.value);
+                                            return result && !!((_o = _this.data["_".concat(condition)]) === null || _o === void 0 ? void 0 : _o.value);
                                         case 'and':
-                                            return result && !!((_l = _this.data["_".concat(condition.slice(1))]) === null || _l === void 0 ? void 0 : _l.value);
+                                            return result && !!((_p = _this.data["_".concat(condition.slice(1))]) === null || _p === void 0 ? void 0 : _p.value);
                                         case 'or':
-                                            return result || !!((_m = _this.data["_".concat(condition.slice(1))]) === null || _m === void 0 ? void 0 : _m.value);
+                                            return result || !!((_q = _this.data["_".concat(condition.slice(1))]) === null || _q === void 0 ? void 0 : _q.value);
                                     }
                                 }
                             }, true) : true;
@@ -276,28 +286,4 @@ var newState = function () {
 };
 exports.newState = newState;
 var globalState = (0, exports.newState)();
-// globalState.set({ a: 1, b: 2, c: 3 });
-// // console.log(
-// // );
-// globalState.when.a.is(5).or.more.watch.b(v =>
-// {
-//   console.log(v);
-// });
-// globalState.when.a.or.more.watch.b(v =>
-// {
-//   console.log(v);
-// });
-// // globalState.when.a.is(5).or.less.watch.b(v =>
-// // {
-// //   console.log(v);
-// // });
-// // globalState.when.a.or.more.watch.b(v =>
-// // {
-// //   console.log(v);
-// // });
-// globalState.b = 2;
-// globalState.a = 6;
-// globalState.b = 3;
-// globalState.a = 4;
-// globalState.b = 4;
 exports["default"] = globalState;

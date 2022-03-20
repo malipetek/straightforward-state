@@ -82,9 +82,16 @@ export const newState = () =>
                   }
                 }
                 
-                const checkValue = entry.isValues[checkValueId];
+                let checkValue = entry.isValues[checkValueId];
+                
                 const operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
                 if (checkValueId) {
+                  /*
+                  If is() method provided with a function we run the function and return early before value checking
+                  */
+                  if (checkValue.call) {
+                    return checkValue(this.data[`_${condition}`]?.value);
+                  }
                   if (orMore) {
                     switch (operator) {
                       case 'none':
@@ -108,6 +115,10 @@ export const newState = () =>
                       case 'none':
                         return result && !!(this.data[`_${condition}`]?.value === checkValue);
                       case 'and':
+                        checkValue
+                        console.log(this.data[`_${condition.slice(1)}`]?.value);
+                        console.log(!!((this.data[`_${condition.slice(1)}`]?.value) === checkValue));
+                        result;
                         return result && !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
                       case 'or':
                         return result || !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
@@ -276,41 +287,5 @@ export const newState = () =>
 };
 
 const globalState = newState();
-
-// globalState.set({ a: 1, b: 2, c: 3 });
-
-// // console.log(
-
-// // );
-
-// globalState.when.a.is(5).or.more.watch.b(v =>
-// {
-//   console.log(v);
-// });
-// globalState.when.a.or.more.watch.b(v =>
-// {
-//   console.log(v);
-// });
-
-// // globalState.when.a.is(5).or.less.watch.b(v =>
-// // {
-// //   console.log(v);
-// // });
-
-// // globalState.when.a.or.more.watch.b(v =>
-// // {
-// //   console.log(v);
-// // });
-
-// globalState.b = 2;
-
-// globalState.a = 6;
-
-// globalState.b = 3;
-
-// globalState.a = 4;
-
-// globalState.b = 4;
-
 
 export default globalState;
