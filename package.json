@@ -1,13 +1,13 @@
 {
   "name": "@malipetek/straightforward-state",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Straightforward State, with conditional watching at one level deep",
   "main": "index.js",
   "scripts": {
     "test": "jest",
     "test-watch": "jest --watchAll",
     "build": "tsc ./index.ts",
-    "publish": "npm run build && npm run test && npm publish"
+    "publish": "npm run build && npm run test"
   },
   "author": "m.ali petek",
   "license": "ISC",
@@ -18,5 +18,6 @@
   },
   "dependencies": {
     "typescript": "^4.6.2"
-  }
+  },
+  "keywords": ["state", "easy", "watch", "simple", "straightforward", "just watch"]
 }
