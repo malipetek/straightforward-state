@@ -10,31 +10,31 @@ A state object that is conditionally watchable on first depth only.
 ## Install:
 
 ```
-npm i -s straigtforward-state
+npm i -s @malipetek/straigtforward-state
 ```
 
 or
 
 ```
-yarn add straigtforward-state
+yarn add @malipetek/straigtforward-state
 ```
 
 ## import or require
 
 ```js
-import state from "straightforward-state";
+import state from "@malipetek/straigtforward-state";
 ```
 
 or
 
 ```js
-const state = require("straightforward-state");
+const state = require("@malipetek/straigtforward-state");
 ```
 
 Alternatively you can get instances like this:
 
 ```js
-import { newState } from "straightforward-state";
+import { newState } from "@malipetek/straigtforward-state";
 const state1 = newState();
 const state2 = newState();
 ```
