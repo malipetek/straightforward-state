@@ -199,3 +199,18 @@ test('Check or.more without is error', () => {
   }
 });
 
+test('Check watch all', () => {
+  const setCallback = jest.fn();
+  const paramCallback = jest.fn();
+  
+  state.watch.all = setCallback;
+  state.watch.all(paramCallback);
+  
+  state.b = 2;
+  state.a = 3;
+  state.c = 4;
+  
+  expect(setCallback).toBeCalledTimes(3);
+  expect(paramCallback).toBeCalledTimes(3);
+});
+

@@ -21,12 +21,80 @@ export const newState = () =>
     },
     conditionToSet: '',
     lastAccessedValue: null,
+    allwatchers: [],
+    evaluateCondition (entry)
+    {
+      return entry.condition ? entry.condition.split('_ncd_').reduce((result, cd) =>
+        {
+        let [condition, checkValueId] = cd.split('_cvid_');
+          let orMore = false;
+          let orLess = false;
+          if (checkValueId) {
+            if (checkValueId.indexOf('_omore_') > -1) {
+              orMore = true;
+              checkValueId = checkValueId.replace('_omore_', '');
+            }
+            if (checkValueId.indexOf('_oless_') > -1) {
+              orLess = true;
+              checkValueId = checkValueId.replace('_oless_', '');
+            }
+          }
+          
+          let checkValue = entry.isValues[checkValueId];
+          
+        const operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
+          if (checkValueId) {
+            /*
+            If is() method provided with a function we run the function and return early before value checking
+            */
+            if (checkValue.call) {
+              return checkValue(this.data[`_${condition}`]?.value);
+            }
+            if (orMore) {
+              switch (operator) {
+                case 'none':
+                  return result && !!(this.data[`_${condition}`]?.value >= checkValue);
+                case 'and':
+                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
+                case 'or':
+                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
+              }
+            } else if (orLess) { 
+              switch (operator) {
+                case 'none':
+                  return result && !!(this.data[`_${condition}`]?.value <= checkValue);
+                case 'and':
+                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
+                case 'or':
+                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
+              }
+            } else {
+              switch (operator) {
+                case 'none':
+                  return result && !!(this.data[`_${condition}`]?.value === checkValue);
+                case 'and':
+                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
+                case 'or':
+                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
+              }
+            }
+          } else {
+            switch (operator) {
+              case 'none':
+                return result && !!this.data[`_${condition}`]?.value;
+              case 'and':
+                return result && !!(this.data[`_${condition.slice(1)}`]?.value);
+              case 'or':
+                return result || !!(this.data[`_${condition.slice(1)}`]?.value);
+            }
+          }
+        }, true) : true;
+    }
   };
 
   Object.defineProperty(state.or, 'more', {
     get: function ()
     {
-      console.log(state.conditionToSet);
       if (state.conditionToSet.indexOf('_cvid_') > -1) {
         state.conditionToSet += '_omore_';
         return state;
@@ -62,91 +130,39 @@ export const newState = () =>
   
           // always run
           const watchers = this.watch[`get_${key}`];
-          const oncers = this.once[key];
-          const cond_watchers = this.until[key];
+          // run once
+          const oncers = this.once[`get_${key}`];
+          // run if returns true
+          const until_watchers = this.until[`get_${key}`];
+
+          this.allwatchers.forEach(entry => entry(key, v, was, this.data));
+
           if (watchers && watchers.length) {
             watchers.forEach(entry => {
-              let conditionResult = entry.condition ? entry.condition.split('_ncd_').reduce((result, cd) =>
-              {
-                let [condition, checkValueId] = cd.split('_cvid_');
-                let orMore = false;
-                let orLess = false;
-                if (checkValueId) {
-                  if (checkValueId.indexOf('_omore_') > -1) {
-                    orMore = true;
-                    checkValueId = checkValueId.replace('_omore_', '');
-                  }
-                  if (checkValueId.indexOf('_oless_') > -1) { 
-                    orLess = true;
-                    checkValueId = checkValueId.replace('_oless_', '');
-                  }
-                }
-                
-                let checkValue = entry.isValues[checkValueId];
-                
-                const operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
-                if (checkValueId) {
-                  /*
-                  If is() method provided with a function we run the function and return early before value checking
-                  */
-                  if (checkValue.call) {
-                    return checkValue(this.data[`_${condition}`]?.value);
-                  }
-                  if (orMore) {
-                    switch (operator) {
-                      case 'none':
-                        return result && !!(this.data[`_${condition}`]?.value >= checkValue);
-                      case 'and':
-                        return result && !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
-                      case 'or':
-                        return result || !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
-                    }
-                  } else if (orLess) { 
-                    switch (operator) {
-                      case 'none':
-                        return result && !!(this.data[`_${condition}`]?.value <= checkValue);
-                      case 'and':
-                        return result && !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
-                      case 'or':
-                        return result || !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
-                    }
-                  } else {
-                    switch (operator) {
-                      case 'none':
-                        return result && !!(this.data[`_${condition}`]?.value === checkValue);
-                      case 'and':
-                        checkValue
-                        console.log(this.data[`_${condition.slice(1)}`]?.value);
-                        console.log(!!((this.data[`_${condition.slice(1)}`]?.value) === checkValue));
-                        result;
-                        return result && !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
-                      case 'or':
-                        return result || !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
-                    }
-                  }
-                } else {
-                  switch (operator) {
-                    case 'none':
-                      return result && !!this.data[`_${condition}`]?.value;
-                    case 'and':
-                      return result && !!(this.data[`_${condition.slice(1)}`]?.value);
-                    case 'or':
-                      return result || !!(this.data[`_${condition.slice(1)}`]?.value);
-                  }
-                }
-              }, true) : true;
+              let conditionResult = this.evaluateCondition(entry);
   
-              if (conditionResult) {
+              if (!conditionResult) return;
                 entry.fn(v, was, this.data);
-              }
             });
           }
           if (oncers && oncers.length) {
-            oncers.forEach(cb => cb(v, was, this.data));
-            this.data[altkey].once = [];
+            this.data[altkey].once = oncers.filter(entry =>
+            {
+              let conditionResult = this.evaluateCondition(entry);
+  
+              if (!conditionResult) return true;
+              entry(v, was, this.data);
+              return false;
+            });
           }
-          if (cond_watchers && cond_watchers.length) {
-            const remaining_watchers = cond_watchers.filter(cb => cb(v, was, this.data));
+          if (until_watchers && until_watchers.length) {
+            const remaining_watchers = until_watchers.filter(entry =>
+            {
+              let conditionResult = this.evaluateCondition(entry);
+  
+              if (!conditionResult) return true;
+              return entry(v, was, this.data);
+            });
             this.data[altkey].once = remaining_watchers;
           }
   
@@ -159,7 +175,7 @@ export const newState = () =>
           return this.data[altkey].value;
         }
       });
-  
+
       /*********
        * WATCH *
        *********/
@@ -167,6 +183,7 @@ export const newState = () =>
         set: (_fn) => {
           const setWatcher = (fn) => {
             const condition = this.conditionToSet;
+            condition
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
@@ -182,7 +199,9 @@ export const newState = () =>
             this.isValuesToCheckAgainst = [];
             this.data[altkey].watch = [...(this.data[altkey].watch || []), { condition, fn, isValues }];
           };
-          return (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+          const callback = (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+
+          return callback;
         }
       });
   
@@ -195,24 +214,62 @@ export const newState = () =>
       /********
        * ONCE *
        ********/
-      Object.defineProperty(this.once, key, {
-        set: (fn) => {
-          this.data[altkey].once = [...(this.data[altkey].once || []), fn];
+       Object.defineProperty(this.once, key, {
+        set: (_fn) => {
+          const setWatcher = (fn) => {
+            const condition = this.conditionToSet;
+            const isValues = this.isValuesToCheckAgainst.slice();
+            this.conditionToSet = '';
+            this.isValuesToCheckAgainst = [];
+            this.data[altkey].once = [...(this.data[altkey].once || []), { condition, fn, isValues }];
+          };
+          if (_fn) { setWatcher(_fn); }
         },
         get: () => {
-          this.lastAccessedValue = altkey;
+          const setWatcher = (fn) => {
+            const condition = this.conditionToSet;
+            const isValues = this.isValuesToCheckAgainst.slice();
+            this.conditionToSet = '';
+            this.isValuesToCheckAgainst = [];
+            this.data[altkey].once = [...(this.data[altkey].once || []), { condition, fn, isValues }];
+          };
+          return (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+        }
+      });
+  
+      Object.defineProperty(this.once, `get_${key}`, {
+        get: () => {
           return this.data[altkey].once;
         }
       });
       /*********
        * UNTIL *
        *********/
-      Object.defineProperty(this.until, key, {
-        set: (fn) => {
-          this.data[altkey].until = [...(this.data[altkey].onchange || []), fn];
+       Object.defineProperty(this.until, key, {
+        set: (_fn) => {
+          const setWatcher = (fn) => {
+            const condition = this.conditionToSet;
+            const isValues = this.isValuesToCheckAgainst.slice();
+            this.conditionToSet = '';
+            this.isValuesToCheckAgainst = [];
+            this.data[altkey].until = [...(this.data[altkey].until || []), { condition, fn, isValues }];
+          };
+          if (_fn) { setWatcher(_fn); }
         },
         get: () => {
-          this.lastAccessedValue = altkey;
+          const setWatcher = (fn) => {
+            const condition = this.conditionToSet;
+            const isValues = this.isValuesToCheckAgainst.slice();
+            this.conditionToSet = '';
+            this.isValuesToCheckAgainst = [];
+            this.data[altkey].until = [...(this.data[altkey].until || []), { condition, fn, isValues }];
+          };
+          return (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+        }
+      });
+  
+      Object.defineProperty(this.until, `get_${key}`, {
+        get: () => {
           return this.data[altkey].until;
         }
       });
@@ -231,7 +288,8 @@ export const newState = () =>
        * AND *
        ********/
       Object.defineProperty(this.and, key, {
-        get: () => {
+        get: () =>
+        {
           this.lastAccessedValue = altkey;
           this.conditionToSet += '_ncd_&' + key;
           return this;
@@ -283,9 +341,40 @@ export const newState = () =>
     }
   });
 
+  Object.defineProperty(state.watch, 'all', {
+      get ()
+      {
+        return (fn) => state.allwatchers.push(fn);
+      },
+      set (fn)
+      {
+        state.allwatchers.push(fn);
+      }
+  });
+
   return state;
 };
 
 const globalState = newState();
+
+const state = newState();
+
+state.set({ a: 1, b: 1, c: 1 });
+
+const setCallback = (v) =>
+{
+  console.log(v)
+};
+const paramCallback = v => {
+  console.log(v)
+};
+console.log(
+  state.when.b.or.c.watch.a.and
+);
+
+state.a = 2;
+state.a = 3;
+state.b = 5;
+
 
 export default globalState;

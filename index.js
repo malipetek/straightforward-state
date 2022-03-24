@@ -26,11 +26,80 @@ var newState = function () {
             return this;
         },
         conditionToSet: '',
-        lastAccessedValue: null
+        lastAccessedValue: null,
+        allwatchers: [],
+        evaluateCondition: function (entry) {
+            var _this = this;
+            return entry.condition ? entry.condition.split('_ncd_').reduce(function (result, cd) {
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+                var _p = cd.split('_cvid_'), condition = _p[0], checkValueId = _p[1];
+                var orMore = false;
+                var orLess = false;
+                if (checkValueId) {
+                    if (checkValueId.indexOf('_omore_') > -1) {
+                        orMore = true;
+                        checkValueId = checkValueId.replace('_omore_', '');
+                    }
+                    if (checkValueId.indexOf('_oless_') > -1) {
+                        orLess = true;
+                        checkValueId = checkValueId.replace('_oless_', '');
+                    }
+                }
+                var checkValue = entry.isValues[checkValueId];
+                var operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
+                if (checkValueId) {
+                    /*
+                    If is() method provided with a function we run the function and return early before value checking
+                    */
+                    if (checkValue.call) {
+                        return checkValue((_a = _this.data["_".concat(condition)]) === null || _a === void 0 ? void 0 : _a.value);
+                    }
+                    if (orMore) {
+                        switch (operator) {
+                            case 'none':
+                                return result && !!(((_b = _this.data["_".concat(condition)]) === null || _b === void 0 ? void 0 : _b.value) >= checkValue);
+                            case 'and':
+                                return result && !!(((_c = _this.data["_".concat(condition.slice(1))]) === null || _c === void 0 ? void 0 : _c.value) >= checkValue);
+                            case 'or':
+                                return result || !!(((_d = _this.data["_".concat(condition.slice(1))]) === null || _d === void 0 ? void 0 : _d.value) >= checkValue);
+                        }
+                    }
+                    else if (orLess) {
+                        switch (operator) {
+                            case 'none':
+                                return result && !!(((_e = _this.data["_".concat(condition)]) === null || _e === void 0 ? void 0 : _e.value) <= checkValue);
+                            case 'and':
+                                return result && !!(((_f = _this.data["_".concat(condition.slice(1))]) === null || _f === void 0 ? void 0 : _f.value) <= checkValue);
+                            case 'or':
+                                return result || !!(((_g = _this.data["_".concat(condition.slice(1))]) === null || _g === void 0 ? void 0 : _g.value) <= checkValue);
+                        }
+                    }
+                    else {
+                        switch (operator) {
+                            case 'none':
+                                return result && !!(((_h = _this.data["_".concat(condition)]) === null || _h === void 0 ? void 0 : _h.value) === checkValue);
+                            case 'and':
+                                return result && !!(((_j = _this.data["_".concat(condition.slice(1))]) === null || _j === void 0 ? void 0 : _j.value) === checkValue);
+                            case 'or':
+                                return result || !!(((_k = _this.data["_".concat(condition.slice(1))]) === null || _k === void 0 ? void 0 : _k.value) === checkValue);
+                        }
+                    }
+                }
+                else {
+                    switch (operator) {
+                        case 'none':
+                            return result && !!((_l = _this.data["_".concat(condition)]) === null || _l === void 0 ? void 0 : _l.value);
+                        case 'and':
+                            return result && !!((_m = _this.data["_".concat(condition.slice(1))]) === null || _m === void 0 ? void 0 : _m.value);
+                        case 'or':
+                            return result || !!((_o = _this.data["_".concat(condition.slice(1))]) === null || _o === void 0 ? void 0 : _o.value);
+                    }
+                }
+            }, true) : true;
+        }
     };
     Object.defineProperty(state.or, 'more', {
         get: function () {
-            console.log(state.conditionToSet);
             if (state.conditionToSet.indexOf('_cvid_') > -1) {
                 state.conditionToSet += '_omore_';
                 return state;
@@ -65,91 +134,35 @@ var newState = function () {
                     _this.data[altkey].value = v;
                     // always run
                     var watchers = _this.watch["get_".concat(key)];
-                    var oncers = _this.once[key];
-                    var cond_watchers = _this.until[key];
+                    // run once
+                    var oncers = _this.once["get_".concat(key)];
+                    // run if returns true
+                    var until_watchers = _this.until["get_".concat(key)];
+                    _this.allwatchers.forEach(function (entry) { return entry(key, v, was, _this.data); });
                     if (watchers && watchers.length) {
                         watchers.forEach(function (entry) {
-                            var conditionResult = entry.condition ? entry.condition.split('_ncd_').reduce(function (result, cd) {
-                                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
-                                var _r = cd.split('_cvid_'), condition = _r[0], checkValueId = _r[1];
-                                var orMore = false;
-                                var orLess = false;
-                                if (checkValueId) {
-                                    if (checkValueId.indexOf('_omore_') > -1) {
-                                        orMore = true;
-                                        checkValueId = checkValueId.replace('_omore_', '');
-                                    }
-                                    if (checkValueId.indexOf('_oless_') > -1) {
-                                        orLess = true;
-                                        checkValueId = checkValueId.replace('_oless_', '');
-                                    }
-                                }
-                                var checkValue = entry.isValues[checkValueId];
-                                var operator = condition[0] === '&' ? 'and' : condition[0] === '|' ? 'or' : 'none';
-                                if (checkValueId) {
-                                    /*
-                                    If is() method provided with a function we run the function and return early before value checking
-                                    */
-                                    if (checkValue.call) {
-                                        return checkValue((_a = _this.data["_".concat(condition)]) === null || _a === void 0 ? void 0 : _a.value);
-                                    }
-                                    if (orMore) {
-                                        switch (operator) {
-                                            case 'none':
-                                                return result && !!(((_b = _this.data["_".concat(condition)]) === null || _b === void 0 ? void 0 : _b.value) >= checkValue);
-                                            case 'and':
-                                                return result && !!(((_c = _this.data["_".concat(condition.slice(1))]) === null || _c === void 0 ? void 0 : _c.value) >= checkValue);
-                                            case 'or':
-                                                return result || !!(((_d = _this.data["_".concat(condition.slice(1))]) === null || _d === void 0 ? void 0 : _d.value) >= checkValue);
-                                        }
-                                    }
-                                    else if (orLess) {
-                                        switch (operator) {
-                                            case 'none':
-                                                return result && !!(((_e = _this.data["_".concat(condition)]) === null || _e === void 0 ? void 0 : _e.value) <= checkValue);
-                                            case 'and':
-                                                return result && !!(((_f = _this.data["_".concat(condition.slice(1))]) === null || _f === void 0 ? void 0 : _f.value) <= checkValue);
-                                            case 'or':
-                                                return result || !!(((_g = _this.data["_".concat(condition.slice(1))]) === null || _g === void 0 ? void 0 : _g.value) <= checkValue);
-                                        }
-                                    }
-                                    else {
-                                        switch (operator) {
-                                            case 'none':
-                                                return result && !!(((_h = _this.data["_".concat(condition)]) === null || _h === void 0 ? void 0 : _h.value) === checkValue);
-                                            case 'and':
-                                                checkValue;
-                                                console.log((_j = _this.data["_".concat(condition.slice(1))]) === null || _j === void 0 ? void 0 : _j.value);
-                                                console.log(!!(((_k = _this.data["_".concat(condition.slice(1))]) === null || _k === void 0 ? void 0 : _k.value) === checkValue));
-                                                result;
-                                                return result && !!(((_l = _this.data["_".concat(condition.slice(1))]) === null || _l === void 0 ? void 0 : _l.value) === checkValue);
-                                            case 'or':
-                                                return result || !!(((_m = _this.data["_".concat(condition.slice(1))]) === null || _m === void 0 ? void 0 : _m.value) === checkValue);
-                                        }
-                                    }
-                                }
-                                else {
-                                    switch (operator) {
-                                        case 'none':
-                                            return result && !!((_o = _this.data["_".concat(condition)]) === null || _o === void 0 ? void 0 : _o.value);
-                                        case 'and':
-                                            return result && !!((_p = _this.data["_".concat(condition.slice(1))]) === null || _p === void 0 ? void 0 : _p.value);
-                                        case 'or':
-                                            return result || !!((_q = _this.data["_".concat(condition.slice(1))]) === null || _q === void 0 ? void 0 : _q.value);
-                                    }
-                                }
-                            }, true) : true;
-                            if (conditionResult) {
-                                entry.fn(v, was, _this.data);
-                            }
+                            var conditionResult = _this.evaluateCondition(entry);
+                            if (!conditionResult)
+                                return;
+                            entry.fn(v, was, _this.data);
                         });
                     }
                     if (oncers && oncers.length) {
-                        oncers.forEach(function (cb) { return cb(v, was, _this.data); });
-                        _this.data[altkey].once = [];
+                        _this.data[altkey].once = oncers.filter(function (entry) {
+                            var conditionResult = _this.evaluateCondition(entry);
+                            if (!conditionResult)
+                                return true;
+                            entry(v, was, _this.data);
+                            return false;
+                        });
                     }
-                    if (cond_watchers && cond_watchers.length) {
-                        var remaining_watchers = cond_watchers.filter(function (cb) { return cb(v, was, _this.data); });
+                    if (until_watchers && until_watchers.length) {
+                        var remaining_watchers = until_watchers.filter(function (entry) {
+                            var conditionResult = _this.evaluateCondition(entry);
+                            if (!conditionResult)
+                                return true;
+                            return entry(v, was, _this.data);
+                        });
                         _this.data[altkey].once = remaining_watchers;
                     }
                 },
@@ -168,6 +181,7 @@ var newState = function () {
                 set: function (_fn) {
                     var setWatcher = function (fn) {
                         var condition = _this.conditionToSet;
+                        condition;
                         var isValues = _this.isValuesToCheckAgainst.slice();
                         _this.conditionToSet = '';
                         _this.isValuesToCheckAgainst = [];
@@ -185,9 +199,10 @@ var newState = function () {
                         _this.isValuesToCheckAgainst = [];
                         _this.data[altkey].watch = __spreadArray(__spreadArray([], (_this.data[altkey].watch || []), true), [{ condition: condition, fn: fn, isValues: isValues }], false);
                     };
-                    return function (_fn) { if (_fn.call) {
+                    var callback = function (_fn) { if (_fn.call) {
                         setWatcher(_fn);
                     } };
+                    return callback;
                 }
             });
             Object.defineProperty(_this.watch, "get_".concat(key), {
@@ -199,11 +214,33 @@ var newState = function () {
              * ONCE *
              ********/
             Object.defineProperty(_this.once, key, {
-                set: function (fn) {
-                    _this.data[altkey].once = __spreadArray(__spreadArray([], (_this.data[altkey].once || []), true), [fn], false);
+                set: function (_fn) {
+                    var setWatcher = function (fn) {
+                        var condition = _this.conditionToSet;
+                        var isValues = _this.isValuesToCheckAgainst.slice();
+                        _this.conditionToSet = '';
+                        _this.isValuesToCheckAgainst = [];
+                        _this.data[altkey].once = __spreadArray(__spreadArray([], (_this.data[altkey].once || []), true), [{ condition: condition, fn: fn, isValues: isValues }], false);
+                    };
+                    if (_fn) {
+                        setWatcher(_fn);
+                    }
                 },
                 get: function () {
-                    _this.lastAccessedValue = altkey;
+                    var setWatcher = function (fn) {
+                        var condition = _this.conditionToSet;
+                        var isValues = _this.isValuesToCheckAgainst.slice();
+                        _this.conditionToSet = '';
+                        _this.isValuesToCheckAgainst = [];
+                        _this.data[altkey].once = __spreadArray(__spreadArray([], (_this.data[altkey].once || []), true), [{ condition: condition, fn: fn, isValues: isValues }], false);
+                    };
+                    return function (_fn) { if (_fn.call) {
+                        setWatcher(_fn);
+                    } };
+                }
+            });
+            Object.defineProperty(_this.once, "get_".concat(key), {
+                get: function () {
                     return _this.data[altkey].once;
                 }
             });
@@ -211,11 +248,33 @@ var newState = function () {
              * UNTIL *
              *********/
             Object.defineProperty(_this.until, key, {
-                set: function (fn) {
-                    _this.data[altkey].until = __spreadArray(__spreadArray([], (_this.data[altkey].onchange || []), true), [fn], false);
+                set: function (_fn) {
+                    var setWatcher = function (fn) {
+                        var condition = _this.conditionToSet;
+                        var isValues = _this.isValuesToCheckAgainst.slice();
+                        _this.conditionToSet = '';
+                        _this.isValuesToCheckAgainst = [];
+                        _this.data[altkey].until = __spreadArray(__spreadArray([], (_this.data[altkey].until || []), true), [{ condition: condition, fn: fn, isValues: isValues }], false);
+                    };
+                    if (_fn) {
+                        setWatcher(_fn);
+                    }
                 },
                 get: function () {
-                    _this.lastAccessedValue = altkey;
+                    var setWatcher = function (fn) {
+                        var condition = _this.conditionToSet;
+                        var isValues = _this.isValuesToCheckAgainst.slice();
+                        _this.conditionToSet = '';
+                        _this.isValuesToCheckAgainst = [];
+                        _this.data[altkey].until = __spreadArray(__spreadArray([], (_this.data[altkey].until || []), true), [{ condition: condition, fn: fn, isValues: isValues }], false);
+                    };
+                    return function (_fn) { if (_fn.call) {
+                        setWatcher(_fn);
+                    } };
+                }
+            });
+            Object.defineProperty(_this.until, "get_".concat(key), {
+                get: function () {
                     return _this.data[altkey].until;
                 }
             });
@@ -282,8 +341,28 @@ var newState = function () {
             throw new Error('You should specify a state member to check after "when" before calling "or"');
         }
     });
+    Object.defineProperty(state.watch, 'all', {
+        get: function () {
+            return function (fn) { return state.allwatchers.push(fn); };
+        },
+        set: function (fn) {
+            state.allwatchers.push(fn);
+        }
+    });
     return state;
 };
 exports.newState = newState;
 var globalState = (0, exports.newState)();
+var state = (0, exports.newState)();
+state.set({ a: 1, b: 1, c: 1 });
+var setCallback = function (v) {
+    console.log(v);
+};
+var paramCallback = function (v) {
+    console.log(v);
+};
+console.log(state.when.b.or.c.watch.a.and);
+state.a = 2;
+state.a = 3;
+state.b = 5;
 exports["default"] = globalState;
