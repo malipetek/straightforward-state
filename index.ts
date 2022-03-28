@@ -357,24 +357,4 @@ export const newState = () =>
 
 const globalState = newState();
 
-const state = newState();
-
-state.set({ a: 1, b: 1, c: 1 });
-
-const setCallback = (v) =>
-{
-  console.log(v)
-};
-const paramCallback = v => {
-  console.log(v)
-};
-console.log(
-  state.when.b.or.c.watch.a.and
-);
-
-state.a = 2;
-state.a = 3;
-state.b = 5;
-
-
 export default globalState;
