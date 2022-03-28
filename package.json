@@ -1,6 +1,6 @@
 {
   "name": "@malipetek/straightforward-state",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Straightforward State, with conditional watching at one level deep",
   "main": "index.js",
   "scripts": {
