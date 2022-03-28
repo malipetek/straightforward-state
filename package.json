@@ -1,6 +1,6 @@
 {
   "name": "@malipetek/straightforward-state",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Straightforward State, with conditional watching at one level deep",
   "main": "index.js",
   "scripts": {
@@ -19,5 +19,12 @@
   "dependencies": {
     "typescript": "^4.6.2"
   },
-  "keywords": ["state", "easy", "watch", "simple", "straightforward", "just watch"]
+  "keywords": [
+    "state",
+    "easy",
+    "watch",
+    "simple",
+    "straightforward",
+    "just watch"
+  ]
 }

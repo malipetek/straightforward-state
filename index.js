@@ -353,16 +353,4 @@ var newState = function () {
 };
 exports.newState = newState;
 var globalState = (0, exports.newState)();
-var state = (0, exports.newState)();
-state.set({ a: 1, b: 1, c: 1 });
-var setCallback = function (v) {
-    console.log(v);
-};
-var paramCallback = function (v) {
-    console.log(v);
-};
-console.log(state.when.b.or.c.watch.a.and);
-state.a = 2;
-state.a = 3;
-state.b = 5;
 exports["default"] = globalState;
