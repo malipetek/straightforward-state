@@ -1,4 +1,17 @@
 # Straightforward State
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/malipetek/straightforward-state.svg)](http://isitmaintained.com/project/malipetek/straightforward-state "Percentage of issues still open")
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/malipetek/straightforward-state.svg)](http://isitmaintained.com/project/malipetek/straightforward-state "Average time to resolve an issue")
+
+
+[![GitHub stars](https://img.shields.io/github/stars/malipetek/straightforward-state.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/malipetek/straightforward-state/stargazers/)
+
+[![Npm package total downloads](https://badgen.net/npm/v/@malipetek/straightforward-state)](https://npmjs.com/package/v/@malipetek/straightforward-state)
+[![Npm package total downloads](https://badgen.net/npm/dt/@malipetek/straightforward-state)](https://npmjs.com/package/dt/@malipetek/straightforward-state)
+
+[![Npm package total downloads](https://badgen.net/packagephobia/publish/@malipetek/straightforward-state)](https://badgen.net/packagephobia/publish/@malipetek/straightforward-state)
+
+[![Npm package total downloads](https://badgen.net/npm/types/@malipetek/straightforward-state)](https://badgen.net/npm/types/@malipetek/straightforward-state)
+
 
 A state object that is conditionally watchable on first depth only.
 
@@ -67,6 +80,7 @@ state.things = [...state.things, 4];
 ```
 
 ## Watch
+### Watch a member
 ```js
 state.watch.things = (val, was) => {
   val // [1,2,3,4]
@@ -80,7 +94,18 @@ state.watch.numberOfThings((val, was) => {
   was // 3
 });
 ```
+### Watch All
+```js
+state.watch.all = (changedKey, val, was) => {
+  changedKey // 'things', 'numberOfThings'
+  state[changedKey] // [1], 1
+  val // [1], 1
+  was // [1,2,3], 3
+};
 
+state.things = [1];
+state.numberOfThings = 1;
+```
 ## Conditional watch
 ```js
 state.when.things.watch.numberOfThings(callback);
