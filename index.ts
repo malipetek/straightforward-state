@@ -1,20 +1,34 @@
-interface State
-{
+interface State<T> {
   set?: Function;
   [key: string]: any;
+  data: Record<string, T>;
+  watch: Record<string, any>;
+  // Use brackets and specify the type for until property
+  isValuesToCheckAgainst: Array<any>;
+  conditionToSet: string;
+  lastAccessedValue: any;
+  allwatchers: Array<any>;
+  evaluateCondition: (entry: any) => boolean;
+  ["is"]: ((is: string) => StateInterface<T>) | keyof T | any;
+  ["and"]: ((and: string) => StateInterface<T>) | keyof T | any;
+  ["or"]: ((or: string) => StateInterface<T>) | keyof T | any;
+  ["when"]: ((when: string) => StateInterface<T>) | keyof T | any;
+  ["once"]: ((once: string) => StateInterface<T>) | keyof T | any;
+  ["until"]: ((until: string) => StateInterface<T>) | keyof T | any;
 }
+
 export const newState = () =>
 {
-  const state: State = {
+  const state: State<object> = {
     data: {},
     watch: {},
     once: {},
     until: {},
     when: {},
     and: {},
-    or: { thisisor: 1},
+    or: { thisisor: 1 },
     isValuesToCheckAgainst: [],
-    is: function (is) {
+    is: function (is: string) {
       this.conditionToSet += '_cvid_' + this.isValuesToCheckAgainst.length;
       this.isValuesToCheckAgainst = [...this.isValuesToCheckAgainst, is];
       return this;
