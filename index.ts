@@ -1,25 +1,58 @@
-interface State<T> {
-  set?: Function;
-  [key: string]: any;
-  data: Record<string, T>;
-  watch: Record<string, any>;
-  // Use brackets and specify the type for until property
-  isValuesToCheckAgainst: Array<any>;
-  conditionToSet: string;
-  lastAccessedValue: any;
-  allwatchers: Array<any>;
-  evaluateCondition: (entry: any) => boolean;
-  ["is"]: ((is: string) => StateInterface<T>) | keyof T | any;
-  ["and"]: ((and: string) => StateInterface<T>) | keyof T | any;
-  ["or"]: ((or: string) => StateInterface<T>) | keyof T | any;
-  ["when"]: ((when: string) => StateInterface<T>) | keyof T | any;
-  ["once"]: ((once: string) => StateInterface<T>) | keyof T | any;
-  ["until"]: ((until: string) => StateInterface<T>) | keyof T | any;
+export type State<T> = T & {
+  set<U> (data: U): State<T & U>;
+  data: { [K in keyof T]: { value: T[K] } };
+
+  when: WhenBuilder<T>;
+
+  watch: Watcher<T>;
+  once: Watcher<T>;
+  until: UntilWatcher<T>;
 }
 
-export const newState = () =>
+export type WhenBuilder<T> = {
+  [K in keyof T]: ConditionBuilder<T, T[K]>;
+}
+
+export type ConditionBuilder<T, V> = {
+  is (value: V | ((val: V) => boolean)): ChainBuilder<T>;
+}
+
+export type ChainBuilder<T> = {
+  and: WhenBuilder<T>;
+  or: OrBuilder<T>;
+
+  watch: Watcher<T>;
+  once: Watcher<T>;
+  until: UntilWatcher<T>;
+}
+
+export type OrBuilder<T> = WhenBuilder<T> & {
+  more: ChainBuilder<T>;
+  less: ChainBuilder<T>;
+}
+
+export type Watcher<T> = {
+  [K in keyof T]: (value: T[K], oldValue: T[K], data: { [P in keyof T]: { value: T[P] } }) => void;
+} & {
+  all?: (key: keyof T, value: any, oldValue: any, data: any) => void;
+}
+
+export type UntilWatcher<T> = {
+  [K in keyof T]: (value: T[K], oldValue: T[K], data: { [P in keyof T]: { value: T[P] } }) => boolean;
+}
+
+type InternalState<T> = State<T> & {
+  conditionToSet: string;
+  isValuesToCheckAgainst: any[];
+  lastAccessedValue: any;
+  allwatchers: any[];
+  evaluateCondition: (entry: any) => boolean;
+  [key: string]: any;
+}
+
+export const newState = <T extends object = {}> (): State<T> =>
 {
-  const state: State<object> = {
+  const state = {
     data: {},
     watch: {},
     once: {},
@@ -28,7 +61,8 @@ export const newState = () =>
     and: {},
     or: { thisisor: 1 },
     isValuesToCheckAgainst: [],
-    is: function (is: string) {
+    is: function (this: InternalState<T>, is: string)
+    {
       this.conditionToSet += '_cvid_' + this.isValuesToCheckAgainst.length;
       this.isValuesToCheckAgainst = [...this.isValuesToCheckAgainst, is];
       return this;
@@ -36,9 +70,9 @@ export const newState = () =>
     conditionToSet: '',
     lastAccessedValue: null,
     allwatchers: [],
-    evaluateCondition (entry)
+    evaluateCondition (this: InternalState<T>, entry: any)
     {
-      return entry.condition ? entry.condition.split('_ncd_').reduce((result, cd) =>
+      return entry.condition ? entry.condition.split('_ncd_').reduce((result: any, cd: any) =>
         {
         let [condition, checkValueId] = cd.split('_cvid_');
           let orMore = false;
@@ -62,49 +96,49 @@ export const newState = () =>
             If is() method provided with a function we run the function and return early before value checking
             */
             if (checkValue.call) {
-              return checkValue(this.data[`_${condition}`]?.value);
+              return checkValue((this.data as any)[`_${condition}`]?.value);
             }
             if (orMore) {
               switch (operator) {
                 case 'none':
-                  return result && !!(this.data[`_${condition}`]?.value >= checkValue);
+                  return result && !!((this.data as any)[`_${condition}`]?.value >= checkValue);
                 case 'and':
-                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
+                  return result && !!(((this.data as any)[`_${condition.slice(1)}`]?.value) >= checkValue);
                 case 'or':
-                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) >= checkValue);
+                  return result || !!(((this.data as any)[`_${condition.slice(1)}`]?.value) >= checkValue);
               }
             } else if (orLess) { 
               switch (operator) {
                 case 'none':
-                  return result && !!(this.data[`_${condition}`]?.value <= checkValue);
+                  return result && !!((this.data as any)[`_${condition}`]?.value <= checkValue);
                 case 'and':
-                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
+                  return result && !!(((this.data as any)[`_${condition.slice(1)}`]?.value) <= checkValue);
                 case 'or':
-                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) <= checkValue);
+                  return result || !!(((this.data as any)[`_${condition.slice(1)}`]?.value) <= checkValue);
               }
             } else {
               switch (operator) {
                 case 'none':
-                  return result && !!(this.data[`_${condition}`]?.value === checkValue);
+                  return result && !!((this.data as any)[`_${condition}`]?.value === checkValue);
                 case 'and':
-                  return result && !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
+                  return result && !!(((this.data as any)[`_${condition.slice(1)}`]?.value) === checkValue);
                 case 'or':
-                  return result || !!((this.data[`_${condition.slice(1)}`]?.value) === checkValue);
+                  return result || !!(((this.data as any)[`_${condition.slice(1)}`]?.value) === checkValue);
               }
             }
           } else {
             switch (operator) {
               case 'none':
-                return result && !!this.data[`_${condition}`]?.value;
+                return result && !!(this.data as any)[`_${condition}`]?.value;
               case 'and':
-                return result && !!(this.data[`_${condition.slice(1)}`]?.value);
+                return result && !!((this.data as any)[`_${condition.slice(1)}`]?.value);
               case 'or':
-                return result || !!(this.data[`_${condition.slice(1)}`]?.value);
+                return result || !!((this.data as any)[`_${condition.slice(1)}`]?.value);
             }
           }
         }, true) : true;
     }
-  };
+  } as unknown as InternalState<T>;
 
   Object.defineProperty(state.or, 'more', {
     get: function ()
@@ -130,29 +164,31 @@ export const newState = () =>
     }
   });
 
-  function setStateMembers(payl) {
+  function setStateMembers (this: InternalState<T>, payl: any)
+  {
     Object.keys(payl).forEach(key => {
       const altkey = `_${key}`;
       if (this[key]) return;
-      this.data[altkey] = { value: payl[key] };
-      this.watch[key] = {};
+      (this.data as any)[altkey] = { value: payl[key] };
+      (this.watch as any)[key] = {};
   
       Object.defineProperty(state, key, {
         set: (v) => {
-          const was = this.data[altkey].value;
-          this.data[altkey].value = v;
+          const was = (this.data as any)[altkey].value;
+          (this.data as any)[altkey].value = v;
   
           // always run
-          const watchers = this.watch[`get_${key}`];
+          const watchers = (this.watch as any)[`get_${key}`];
           // run once
-          const oncers = this.once[`get_${key}`];
+          const oncers = (this.once as any)[`get_${key}`];
           // run if returns true
-          const until_watchers = this.until[`get_${key}`];
+          const until_watchers = (this.until as any)[`get_${key}`];
 
-          this.allwatchers.forEach(entry => entry(key, v, was, this.data));
+          this.allwatchers.forEach((entry: any) => entry(key, v, was, this.data));
 
           if (watchers && watchers.length) {
-            watchers.forEach(entry => {
+            watchers.forEach((entry: any) =>
+            {
               let conditionResult = this.evaluateCondition(entry);
   
               if (!conditionResult) return;
@@ -160,7 +196,7 @@ export const newState = () =>
             });
           }
           if (oncers && oncers.length) {
-            this.data[altkey].once = oncers.filter(entry =>
+            (this.data as any)[altkey].once = oncers.filter((entry: any) =>
             {
               let conditionResult = this.evaluateCondition(entry);
   
@@ -170,14 +206,14 @@ export const newState = () =>
             });
           }
           if (until_watchers && until_watchers.length) {
-            const remaining_watchers = until_watchers.filter(entry =>
+            const remaining_watchers = until_watchers.filter((entry: any) =>
             {
               let conditionResult = this.evaluateCondition(entry);
   
               if (!conditionResult) return true;
               return entry(v, was, this.data);
             });
-            this.data[altkey].once = remaining_watchers;
+            (this.data as any)[altkey].once = remaining_watchers;
           }
   
         },
@@ -186,7 +222,7 @@ export const newState = () =>
             throw new Error('You should you one of the following after declaring a "when statement": and, or, watch');
           }
           this.lastAccessedValue = altkey;
-          return this.data[altkey].value;
+          return (this.data as any)[altkey].value;
         }
       });
 
@@ -195,25 +231,27 @@ export const newState = () =>
        *********/
       Object.defineProperty(this.watch, key, {
         set: (_fn) => {
-          const setWatcher = (fn) => {
+          const setWatcher = (fn: any) =>
+          {
             const condition = this.conditionToSet;
             condition
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].watch = [...(this.data[altkey].watch || []), { condition, fn, isValues }];
+            (this.data as any)[altkey].watch = [...((this.data as any)[altkey].watch || []), { condition, fn, isValues }];
           };
           if (_fn) { setWatcher(_fn); }
         },
         get: () => {
-          const setWatcher = (fn) => {
+          const setWatcher = (fn: any) =>
+          {
             const condition = this.conditionToSet;
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].watch = [...(this.data[altkey].watch || []), { condition, fn, isValues }];
+            (this.data as any)[altkey].watch = [...((this.data as any)[altkey].watch || []), { condition, fn, isValues }];
           };
-          const callback = (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+          const callback = (_fn: any) => { if (_fn.call) { setWatcher(_fn); } };
 
           return callback;
         }
@@ -221,7 +259,7 @@ export const newState = () =>
   
       Object.defineProperty(this.watch, `get_${key}`, {
         get: () => {
-          return this.data[altkey].watch;
+          return (this.data as any)[altkey].watch;
         }
       });
   
@@ -230,30 +268,32 @@ export const newState = () =>
        ********/
        Object.defineProperty(this.once, key, {
         set: (_fn) => {
-          const setWatcher = (fn) => {
+           const setWatcher = (fn: any) =>
+           {
             const condition = this.conditionToSet;
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].once = [...(this.data[altkey].once || []), { condition, fn, isValues }];
+             (this.data as any)[altkey].once = [...((this.data as any)[altkey].once || []), { condition, fn, isValues }];
           };
           if (_fn) { setWatcher(_fn); }
         },
         get: () => {
-          const setWatcher = (fn) => {
+          const setWatcher = (fn: any) =>
+          {
             const condition = this.conditionToSet;
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].once = [...(this.data[altkey].once || []), { condition, fn, isValues }];
+            (this.data as any)[altkey].once = [...((this.data as any)[altkey].once || []), { condition, fn, isValues }];
           };
-          return (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+          return (_fn: any) => { if (_fn.call) { setWatcher(_fn); } };
         }
       });
   
       Object.defineProperty(this.once, `get_${key}`, {
         get: () => {
-          return this.data[altkey].once;
+          return (this.data as any)[altkey].once;
         }
       });
       /*********
@@ -261,30 +301,32 @@ export const newState = () =>
        *********/
        Object.defineProperty(this.until, key, {
         set: (_fn) => {
-          const setWatcher = (fn) => {
+           const setWatcher = (fn: any) =>
+           {
             const condition = this.conditionToSet;
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].until = [...(this.data[altkey].until || []), { condition, fn, isValues }];
+             (this.data as any)[altkey].until = [...((this.data as any)[altkey].until || []), { condition, fn, isValues }];
           };
           if (_fn) { setWatcher(_fn); }
         },
         get: () => {
-          const setWatcher = (fn) => {
+          const setWatcher = (fn: any) =>
+          {
             const condition = this.conditionToSet;
             const isValues = this.isValuesToCheckAgainst.slice();
             this.conditionToSet = '';
             this.isValuesToCheckAgainst = [];
-            this.data[altkey].until = [...(this.data[altkey].until || []), { condition, fn, isValues }];
+            (this.data as any)[altkey].until = [...((this.data as any)[altkey].until || []), { condition, fn, isValues }];
           };
-          return (_fn) => { if (_fn.call) { setWatcher(_fn); } };
+          return (_fn: any) => { if (_fn.call) { setWatcher(_fn); } };
         }
       });
   
       Object.defineProperty(this.until, `get_${key}`, {
         get: () => {
-          return this.data[altkey].until;
+          return (this.data as any)[altkey].until;
         }
       });
   
@@ -321,11 +363,13 @@ export const newState = () =>
       });
 
     });
+    return this;
   }
   
   Object.defineProperty(state, "set", {
     set: (payl) => setStateMembers.call(state, payl),
-    get: () => (payl) => {
+    get: () => (payl: any) =>
+    {
       return setStateMembers.call(state, payl);
     }
   });
@@ -358,7 +402,7 @@ export const newState = () =>
   Object.defineProperty(state.watch, 'all', {
       get ()
       {
-        return (fn) => state.allwatchers.push(fn);
+      return (fn: any) => state.allwatchers.push(fn);
       },
       set (fn)
       {

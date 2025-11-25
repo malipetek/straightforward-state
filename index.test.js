@@ -1,7 +1,10 @@
 import { jest, expect, test } from '@jest/globals';
-import state from './index.js';
+import { newState } from './index';
 
-state.set({ a: 1, b: 1, c: 1 });
+const state = newState()
+  .set({ a: 1 })
+  .set({ b: 1 })
+  .set({ c: 1 });
 
 test('Check state value', () => {
   expect(state.a).toBe(1);

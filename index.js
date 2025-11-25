@@ -8,7 +8,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.newState = void 0;
 var newState = function () {
     var state = {
@@ -309,6 +309,7 @@ var newState = function () {
                 }
             });
         });
+        return this;
     }
     Object.defineProperty(state, "set", {
         set: function (payl) { return setStateMembers.call(state, payl); },
@@ -353,4 +354,4 @@ var newState = function () {
 };
 exports.newState = newState;
 var globalState = (0, exports.newState)();
-exports["default"] = globalState;
+exports.default = globalState;
